@@ -1,0 +1,319 @@
+<script>
+let STATE = { rows: [], dropdowns: {}, dashboard: {}, filteredRows: [] };
+const $ = (id) => document.getElementById(id);
+const views = ['dashboard01','dashboard02','dashboard03','dashboard04','database'];
+
+function toast(msg){
+  const el = $('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2600);
+}
+
+function serverCall(fn, ...args){
+  return new Promise((resolve, reject) => {
+    google.script.run
+      .withSuccessHandler(resolve)
+      .withFailureHandler(err => reject(err))
+      [fn](...args);
+  });
+}
+
+async function loadData(){
+  $('loading').style.display = 'block';
+  try{
+    const data = await serverCall('getBootstrapData');
+    STATE.rows = data.rows || [];
+    STATE.dropdowns = data.dropdowns || {};
+    STATE.dashboard = data.dashboard || {};
+    STATE.filteredRows = STATE.rows;
+    renderAll();
+    $('loading').style.display = 'none';
+    toast('Refresh สำเร็จ');
+  }catch(err){
+    $('loading').textContent = 'Load error: ' + (err.message || err);
+  }
+}
+
+function renderAll(){
+  renderDropdowns();
+  renderKpis();
+  renderSummaryTables();
+  renderPhaseTables();
+  renderFilters();
+  renderDbTable();
+}
+
+function renderDropdowns(){
+  const map = {
+    area:'area', surveyResults:'surveyResults', finalResults:'finalResults',
+    overallStatus:'overallStatus', inspectorPic:'inspectorPic', surveyStatus:'surveyStatus'
+  };
+  Object.entries(map).forEach(([key,id]) => fillSelect($(id), STATE.dropdowns[key] || [], true));
+}
+
+function fillSelect(select, items, allowBlank){
+  if(!select) return;
+  const current = select.value;
+  select.innerHTML = allowBlank ? '<option value=""></option>' : '';
+  items.forEach(v => {
+    const opt = document.createElement('option');
+    opt.value = v; opt.textContent = v;
+    select.appendChild(opt);
+  });
+  if(current) select.value = current;
+}
+
+function renderKpis(){
+  const c = STATE.dashboard.cards || {};
+  const done = Number(c.completed || 0);
+  const cards = [
+    ['1. NETWORK OVERVIEW', c.total || 0, 'Unique Active Hubs'],
+    ['2. ACQUISITION FLOW', c.acquisition || 0, 'HUBS'],
+    ['3. OUTREACH PIPELINE', c.outreach || 0, 'HUBS'],
+    ['4. TOTAL DONE VERIFIED', done < 10 ? String(done).padStart(2, '0') : done, 'Hubs Fully Done']
+  ];
+  $('kpiGrid').innerHTML = cards.map(x => `<div class="kpi-card"><p>${x[0]}</p><strong>${x[1]}</strong><span>${x[2]}</span></div>`).join('');
+}
+
+function renderMiniKpi(id, items){
+  $(id).innerHTML = items.map(x => `<div class="mini-card"><p>${x[0]}</p><strong>${x[1]}</strong><span>${x[2]||'Hubs'}</span></div>`).join('');
+}
+
+function renderSummaryTables(){
+  const t = STATE.dashboard.tables || {};
+  renderSummary('statusTable', t.status || [], 'status');
+  renderSummary('surveyTable', t.survey || [], 'status');
+  renderSummary('finalTable', t.final || [], 'status');
+  renderSummary('picTable', t.pic || [], 'pic');
+}
+
+function summaryLabel(label, type){
+  if(type === 'pic') return picPill(label);
+  if(type === 'status') return statusPill(label);
+  return `<b>${escapeHtml(label)}</b>`;
+}
+
+function renderSummary(id, rows, type){
+  $(id).innerHTML = rows.map(r => `
+    <div class="summary-row">
+      <div class="summary-label">${summaryLabel(r.label, type)}</div>
+      <strong class="summary-count">${r.count}</strong>
+    </div>`).join('') || '<p class="muted">No data</p>';
+}
+
+function renderPhaseTables(){
+  const d = STATE.dashboard;
+  const p2 = d.phase2 || [], p3 = d.phase3 || [], p4 = d.phase4 || [];
+  renderMiniKpi('phase2Kpi', [
+    ['PENDING LANDLORD', countStatus(p2,'Pending LL')],
+    ['RM DECISION', countStatus(p2,'Pending RM decision')],
+    ['DISCUSSION', countStatus(p2,'Pending discussion')],
+    ['PHASE TOTAL', p2.length]
+  ]);
+  renderMiniKpi('phase3Kpi', [
+    ['PENDING PROPOSE', countStatus(p3,'Pending propose')],
+    ['OPEN EMAIL', countStatus(p3,'Pending Open E-mail')],
+    ['APPROVED EMAIL', countStatus(p3,'Pending approved Email')],
+    ['PHASE TOTAL', p3.length]
+  ]);
+  renderMiniKpi('phase4Kpi', [
+    ['OPERATIONAL STATUS', p4.length, 'Fully Completed'],
+    ['TOTAL COMPLETION RATE', (STATE.dashboard.cards?.total ? Math.round((p4.length/STATE.dashboard.cards.total)*100) : 0) + '%', 'Launch Success']
+  ]);
+  renderHubTable('phase2Table', p2, 'Latest Operational Update Details');
+  renderHubTable('phase3Table', p3, 'Workflow & Outreach Update Details');
+  renderHubTable('phase4Table', p4, 'Final Launch & Operational Status Details');
+}
+
+function countStatus(rows, status){return rows.filter(r => r.overallStatus === status).length;}
+
+function renderHubTable(id, rows, updateHeader){
+  $(id).innerHTML = `
+    <thead><tr><th>Hub Code</th><th>Area</th><th>District</th><th>Hub Direction</th><th>${updateHeader}</th><th>WK</th><th>PIC</th><th>Status</th><th>Survey</th><th>Action</th></tr></thead>
+    <tbody>${rows.map(r => rowHtml(r)).join('')}</tbody>`;
+}
+
+function rowHtml(r){
+  return `<tr>
+    <td><b>${escapeHtml(r.hubCode)}</b></td>
+    <td>${escapeHtml(r.area)}</td>
+    <td>${escapeHtml(r.district)}</td>
+    <td>${escapeHtml(r.hubDirection)}</td>
+    <td class="daily-cell">${escapeHtml(r.dailyUpdate)}</td>
+    <td class="week-cell">${escapeHtml(r.week)}</td>
+    <td>${picPill(r.inspectorPic)}</td>
+    <td>${statusPill(r.overallStatus)}</td>
+    <td>${statusPill(r.surveyResults)}</td>
+    <td><button class="ghost" onclick='editRow(${JSON.stringify(r).replace(/'/g,"&#39;")})'>Edit</button></td>
+  </tr>`;
+}
+
+function renderFilters(){
+  fillSelect($('statusFilter'), STATE.dropdowns.overallStatus || [], true);
+  fillSelect($('picFilter'), STATE.dropdowns.inspectorPic || [], true);
+}
+
+function renderDbTable(){
+  const q = ($('globalSearch').value || '').toLowerCase();
+  const status = $('statusFilter').value;
+  const pic = $('picFilter').value;
+  const rows = STATE.rows.filter(r => {
+    const text = Object.values(r).join(' ').toLowerCase();
+    return (!q || text.includes(q)) && (!status || r.overallStatus === status) && (!pic || r.inspectorPic === pic);
+  });
+  $('dbTable').innerHTML = `
+    <thead><tr><th>Hub Code</th><th>Area</th><th>District</th><th>Hub Direction</th><th>Daily Update</th><th>Week</th><th>Year</th><th>Survey</th><th>Final</th><th>Overall</th><th>PIC</th><th>Survey Status</th><th>Revise email</th><th>Action</th></tr></thead>
+    <tbody>${rows.map(r => `<tr>
+      <td><b>${escapeHtml(r.hubCode)}</b></td><td>${escapeHtml(r.area)}</td><td>${escapeHtml(r.district)}</td><td>${escapeHtml(r.hubDirection)}</td><td class="daily-cell">${escapeHtml(r.dailyUpdate)}</td>
+      <td class="week-cell">${escapeHtml(r.week)}</td><td class="year-cell">${escapeHtml(r.year)}</td><td>${statusPill(r.surveyResults)}</td><td>${statusPill(r.finalResults)}</td><td>${statusPill(r.overallStatus)}</td><td>${picPill(r.inspectorPic)}</td><td>${statusPill(r.surveyStatus)}</td><td>${escapeHtml(r.reviseEmail)}</td>
+      <td><button class="ghost" onclick='editRow(${JSON.stringify(r).replace(/'/g,"&#39;")})'>Edit</button></td>
+    </tr>`).join('')}</tbody>`;
+}
+
+function pillClass(value){
+  const v = (value || '').toLowerCase();
+  if(v === 'passed' || v === 'pass') return 'passed';
+  if(v.includes('not') || v.includes('failed') || v.includes('reject')) return 'failed';
+  if(v.includes('resurvey') || v.includes('re-survey') || v.includes('revise') || v.includes('revision')) return 'revision';
+  if(v.includes('agent') || v.includes('remove')) return 'modelchange';
+  if(v === 'done' || v.includes('open line') || v.includes('operational')) return 'operational';
+  if(v.includes('approved')) return 'approved';
+  if(v.includes('open e-mail') || v.includes('open email')) return 'emailopen';
+  if(v.includes('propose') || v.includes('proposal')) return 'propose';
+  if(v.includes('ll') || v.includes('landlord') || v.includes('move out')) return 'landlord';
+  if(v.includes('rm') || v.includes('discussion') || v.includes('discuss')) return 'discussion';
+  if(v.includes('survey') || v.includes('inspection')) return 'fieldcheck';
+  if(v.includes('negotiation') || v.includes('nego')) return 'negotiation';
+  if(v.includes('lead')) return 'lead';
+  return 'pending';
+}
+function statusPill(value){return value ? `<span class="pill ${pillClass(value)}">${escapeHtml(value)}</span>` : '';}
+function picPill(value){return value ? `<span class="pill pic ${escapeHtml(value).toLowerCase().replace(/[^a-z0-9]/g,'')}">${escapeHtml(value)}</span>` : '';}
+function escapeHtml(v){return String(v ?? '').replace(/[&<>'"]/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[s]));}
+
+function showView(id){
+  views.forEach(v => $(v).classList.remove('active-view'));
+  $(id).classList.add('active-view');
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.view === id));
+  const titles = {dashboard01:'Hub Expansion Performance Dashboard',dashboard02:'Acquisition & Assessment Phase',dashboard03:'Proposal & Outreach Pipeline',dashboard04:'Completed & Operational Launch Hubs',database:'Hub Final Database'};
+  $('pageTitle').textContent = titles[id] || 'Hub Final Tracking';
+}
+
+function openModal(){ $('modalBackdrop').classList.add('open'); }
+function closeModal(){ $('modalBackdrop').classList.remove('open'); $('hubForm').reset(); $('rowNumber').value=''; }
+function formData(){
+  const ids = ['rowNumber','hubCode','area','district','hubDirection','dailyUpdate','week','year','surveyResults','finalResults','overallStatus','inspectorPic','surveyStatus','reviseEmail'];
+  return ids.reduce((a,id)=>{ a[id] = $(id).value; return a; }, {});
+}
+
+function parseSheetPaste(text){
+  const keys = ['hubCode','area','district','hubDirection','dailyUpdate','week','year','surveyResults','finalResults','overallStatus','inspectorPic','surveyStatus','reviseEmail'];
+  return String(text || '')
+    .split(/\r?\n/)
+    .map(line => line.trim())
+    .filter(Boolean)
+    .map(line => {
+      const cells = line.includes('\t') ? line.split('\t') : line.split(',');
+      return keys.reduce((row, key, idx) => {
+        row[key] = (cells[idx] || '').trim();
+        return row;
+      }, {});
+    })
+    .filter(row => row.hubCode);
+}
+
+function setForm(data){
+  Object.entries(data || {}).forEach(([k,v]) => {
+    const el = $(k);
+    const value = v || '';
+    if(!el) return;
+    if(el.tagName === 'SELECT' && value && ![...el.options].some(opt => opt.value === value)){
+      const opt = document.createElement('option');
+      opt.value = value;
+      opt.textContent = value;
+      el.appendChild(opt);
+    }
+    el.value = value;
+  });
+}
+window.editRow = function(row){ setForm(row); openModal(); };
+
+function fillFromPaste(){
+  const rows = parseSheetPaste($('bulkPaste').value);
+  if(!rows.length) return toast('วางข้อมูลจาก Sheet ก่อน');
+  setForm(rows[0]);
+  toast(rows.length > 1 ? `Fill แถวแรกแล้ว (${rows.length} แถวพร้อม Add All)` : 'Fill จากข้อความแล้ว');
+}
+
+async function autoFill(){
+  const code = $('hubCode').value;
+  if(!code) return toast('กรุณาใส่ Hub Code ก่อน');
+  const res = await serverCall('autoFillHub', code);
+  if(res.ok){ setForm({ ...res.data, hubCode: code.toUpperCase() }); toast(res.found ? 'Auto fill จากข้อมูลเดิมแล้ว' : 'ใส่ค่า Default ให้แล้ว'); }
+}
+
+async function saveHub(e){
+  e.preventDefault();
+  const data = formData();
+  try{
+    if(data.rowNumber){
+      STATE = await serverCall('updateHub', data.rowNumber, data);
+    }else{
+      STATE = await serverCall('addHub', data);
+    }
+    STATE.rows = STATE.rows || [];
+    STATE.dropdowns = STATE.dropdowns || {};
+    STATE.dashboard = STATE.dashboard || {};
+    renderAll(); closeModal(); toast('Save ลง Google Sheet แล้ว');
+  }catch(err){ toast('Save ไม่สำเร็จ: ' + (err.message || err)); }
+}
+
+async function bulkAddFromPaste(){
+  const rows = parseSheetPaste($('bulkPaste').value);
+  if(!rows.length) return toast('วางข้อมูลจาก Sheet ก่อน');
+  try{
+    STATE = await serverCall('bulkAddHubs', rows);
+    STATE.rows = STATE.rows || [];
+    STATE.dropdowns = STATE.dropdowns || {};
+    STATE.dashboard = STATE.dashboard || {};
+    renderAll();
+    closeModal();
+    toast(`Add ${rows.length} rows ลง Google Sheet แล้ว`);
+  }catch(err){
+    toast('Bulk add ไม่สำเร็จ: ' + (err.message || err));
+  }
+}
+
+function initEvents(){
+  if(window.__hubEventsReady) return;
+  window.__hubEventsReady = true;
+  document.querySelectorAll('.nav-btn').forEach(btn => btn.addEventListener('click', () => showView(btn.dataset.view)));
+  $('refreshBtn').addEventListener('click', loadData);
+  $('openAddHub').addEventListener('click', openModal);
+  $('openAddHubTop').addEventListener('click', openModal);
+  $('closeModal').addEventListener('click', closeModal);
+  $('modalBackdrop').addEventListener('click', e => { if(e.target.id === 'modalBackdrop') closeModal(); });
+  $('autoFillBtn').addEventListener('click', autoFill);
+  $('pasteFillBtn').addEventListener('click', fillFromPaste);
+  $('bulkAddBtn').addEventListener('click', bulkAddFromPaste);
+  $('hubForm').addEventListener('submit', saveHub);
+  $('globalSearch').addEventListener('input', renderDbTable);
+  $('statusFilter').addEventListener('change', renderDbTable);
+  $('picFilter').addEventListener('change', renderDbTable);
+  $('clearFilters').addEventListener('click', () => { $('statusFilter').value=''; $('picFilter').value=''; $('globalSearch').value=''; renderDbTable(); });
+}
+
+function startApp(){
+  if(window.__hubAppStarted) return;
+  window.__hubAppStarted = true;
+  initEvents();
+  loadData();
+}
+
+if(document.readyState === 'loading'){
+  document.addEventListener('DOMContentLoaded', startApp);
+}else{
+  startApp();
+}
+</script>

@@ -1,0 +1,1521 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hub Final Tracking Dashboard</title>
+<style>
+:root {
+  --bg:      #131313;
+  --bg2:     #1c1c1c;
+  --bg3:     #242424;
+  --bg4:     #2e2e2e;
+  --bg5:     #383838;
+  --border:  rgba(255,255,255,.09);
+  --muted:   #888888;
+  --text:    #f5f5f5;
+  --dim:     #cccccc;
+
+  --primary: #ee4d2d;
+  --primary-light: #ff6b4a;
+  --primary-dim:   rgba(238,77,45,.15);
+  --cyan:    #ee4d2d;
+  --green:   #00ba7c;
+  --yellow:  #ffb800;
+  --orange:  #ff7b24;
+  --red:     #ff3b30;
+  --purple:  #9c6dff;
+  --pink:    #f50057;
+  --blue:    #0095f6;
+  --teal:    #ee4d2d;
+
+  --shadow-sm: 0 2px 8px rgba(0,0,0,.4);
+  --shadow:    0 8px 24px rgba(0,0,0,.5);
+  --shadow-lg: 0 16px 48px rgba(0,0,0,.6);
+}
+
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{height:100%;overflow:hidden;}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Noto Sans Thai',system-ui,sans-serif;
+  background:var(--bg);color:var(--text);
+  display:flex;
+}
+
+/* ════════════════════════════
+   SIDEBAR
+════════════════════════════ */
+.sidebar{
+  width:260px;flex-shrink:0;
+  background:linear-gradient(180deg,#0f0f0f 0%,#181818 60%,#1c1c1c 100%);
+  border-right:1px solid var(--border);
+  display:flex;flex-direction:column;
+  height:100vh;overflow:hidden;
+}
+
+.brand{
+  padding:24px 22px 20px;
+  display:flex;align-items:center;gap:14px;
+  border-bottom:1px solid var(--border);
+}
+.brand-icon{
+  width:44px;height:44px;flex-shrink:0;border-radius:12px;
+  background:linear-gradient(135deg,#ee4d2d,#ff7b24);
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.1rem;font-weight:900;color:#fff;
+  box-shadow:0 6px 16px rgba(238,77,45,.4);
+}
+.brand-text .t1{font-size:.75rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);}
+.brand-text .t2{font-size:1.05rem;font-weight:700;color:var(--text);line-height:1.2;}
+
+.nav-section{padding:14px 12px 8px;}
+.nav-label{font-size:.6rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);padding:0 10px;margin-bottom:6px;}
+
+.nav-btn{
+  width:100%;display:flex;align-items:center;gap:12px;
+  padding:11px 12px;border-radius:10px;border:none;
+  background:transparent;color:var(--dim);
+  cursor:pointer;font-size:.83rem;font-weight:500;
+  transition:.15s;text-align:left;position:relative;
+}
+.nav-btn:hover{background:rgba(255,255,255,.06);color:var(--text);}
+.nav-btn.active{background:rgba(238,77,45,.12);color:var(--primary);}
+.nav-btn.active .nav-icon{color:var(--primary);}
+.nav-icon{font-size:.95rem;width:20px;text-align:center;flex-shrink:0;}
+.nav-badge{
+  margin-left:auto;font-size:.65rem;font-weight:700;
+  padding:2px 8px;border-radius:20px;
+  background:rgba(255,255,255,.07);color:var(--muted);
+}
+.nav-btn.active .nav-badge{background:rgba(238,77,45,.18);color:var(--primary);}
+.nav-divider{height:1px;background:var(--border);margin:10px 12px;}
+
+.sidebar-bottom{
+  margin-top:auto;padding:16px;
+  border-top:1px solid var(--border);
+}
+.conn-pill{
+  display:flex;align-items:center;gap:8px;
+  background:rgba(255,255,255,.04);border:1px solid var(--border);
+  border-radius:8px;padding:9px 12px;margin-bottom:10px;
+  font-size:.73rem;color:var(--muted);
+}
+.dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;transition:.3s;}
+.dot.on {background:var(--green);box-shadow:0 0 6px var(--green);}
+.dot.off{background:var(--red);}
+.dot.wait{background:var(--yellow);animation:pulse .8s ease-in-out infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.4;}}
+.btn-setup{
+  width:100%;padding:9px;border-radius:8px;
+  border:1px solid var(--border);background:transparent;
+  color:var(--muted);font-size:.75rem;cursor:pointer;font-family:inherit;
+  transition:.15s;
+}
+.btn-setup:hover{background:rgba(255,255,255,.06);color:var(--text);}
+
+/* ════════════════════════════
+   MAIN
+════════════════════════════ */
+.main{
+  flex:1;min-width:0;
+  display:flex;flex-direction:column;
+  height:100vh;overflow:hidden;
+}
+
+/* Topbar */
+.topbar{
+  flex-shrink:0;
+  padding:0 28px;height:60px;
+  display:flex;align-items:center;justify-content:space-between;
+  background:var(--bg2);border-bottom:1px solid var(--border);
+}
+.topbar-left h2{font-size:.95rem;font-weight:700;}
+.topbar-left p{font-size:.7rem;color:var(--muted);margin-top:1px;}
+.topbar-right{display:flex;align-items:center;gap:8px;}
+.view-badge{
+  font-size:.65rem;font-weight:700;padding:3px 10px;border-radius:20px;
+  background:rgba(238,77,45,.12);color:var(--primary);
+  border:1px solid rgba(238,77,45,.25);
+}
+.btn{
+  padding:7px 14px;border-radius:8px;border:none;
+  cursor:pointer;font-size:.78rem;font-weight:600;
+  transition:.15s;font-family:inherit;
+}
+.btn-ghost{background:rgba(255,255,255,.06);color:var(--text);}
+.btn-ghost:hover{background:rgba(255,255,255,.1);}
+.btn-sm{padding:5px 11px;font-size:.73rem;}
+
+/* Scroll area */
+.scroll-area{flex:1;overflow-y:auto;padding:22px 28px;}
+.scroll-area::-webkit-scrollbar{width:5px;}
+.scroll-area::-webkit-scrollbar-track{background:transparent;}
+.scroll-area::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:3px;}
+
+/* Pages */
+.page{display:none;}
+.page.active{display:block;}
+
+/* ════════════════════════════
+   EXECUTIVE SUMMARY — KPI STRIP
+════════════════════════════ */
+.kpi-strip{
+  display:grid;grid-template-columns:repeat(4,1fr);
+  gap:14px;margin-bottom:16px;
+}
+.kpi-card{
+  background:var(--bg3);border:1px solid var(--border);
+  border-radius:16px;padding:22px 24px;
+  position:relative;overflow:hidden;
+  cursor:pointer;transition:.18s;
+}
+.kpi-card:hover{background:var(--bg4);border-color:rgba(238,77,45,.3);transform:translateY(-1px);box-shadow:var(--shadow);}
+.kpi-card:active{transform:translateY(0);}
+.kpi-card::after{
+  content:'';position:absolute;top:-30px;right:-30px;
+  width:100px;height:100px;border-radius:50%;
+  background:radial-gradient(circle,rgba(255,255,255,.025),transparent 70%);
+  pointer-events:none;
+}
+.kpi-icon{font-size:1.7rem;margin-bottom:12px;line-height:1;}
+.kpi-val{font-size:3.4rem;font-weight:800;line-height:1;letter-spacing:-2px;margin-bottom:8px;}
+.kpi-label{font-size:.78rem;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);}
+.kpi-prog{height:5px;background:var(--bg5);border-radius:3px;margin-top:16px;overflow:hidden;}
+.kpi-prog-fill{height:100%;border-radius:3px;transition:width .8s cubic-bezier(.4,0,.2,1);}
+
+/* ── Charts row ── */
+.charts-row{
+  display:grid;grid-template-columns:260px 1fr 1fr;
+  gap:14px;margin-bottom:14px;
+}
+.chart-card{
+  background:var(--bg3);border:1px solid var(--border);
+  border-radius:16px;padding:18px 20px;
+}
+.cc-head{
+  font-size:.7rem;font-weight:700;text-transform:uppercase;
+  letter-spacing:1.2px;color:var(--muted);
+  display:flex;justify-content:space-between;align-items:center;
+  margin-bottom:14px;
+}
+.cc-chip{
+  font-size:.68rem;font-weight:700;padding:3px 10px;border-radius:20px;
+  background:rgba(238,77,45,.12);color:var(--primary);
+  border:1px solid rgba(238,77,45,.2);text-transform:none;letter-spacing:0;
+}
+
+/* ── Donut ── */
+.donut-wrap{
+  position:relative;display:flex;
+  justify-content:center;align-items:center;
+  margin-bottom:14px;
+}
+.donut-center{
+  position:absolute;text-align:center;
+}
+.donut-center .dn{font-size:1.6rem;font-weight:800;color:var(--text);line-height:1;}
+.donut-center .ds{font-size:.62rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:1px;}
+.donut-legend{display:flex;flex-direction:column;gap:5px;}
+.dl-item{
+  display:flex;align-items:center;gap:8px;
+  padding:4px 0;border-bottom:1px solid var(--border);
+}
+.dl-item:last-child{border-bottom:none;}
+.dl-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.dl-label{font-size:.8rem;color:var(--dim);flex:1;}
+.dl-val{font-size:.85rem;font-weight:700;}
+
+/* ── Phase rows with bars ── */
+.ph-row{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 0;border-bottom:1px solid var(--border);
+}
+.ph-row:last-child{border-bottom:none;}
+.ph-row-icon{font-size:1rem;width:22px;text-align:center;flex-shrink:0;}
+.ph-row-label{font-size:.82rem;color:var(--dim);flex:0 0 160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ph-row-bar-wrap{flex:1;height:8px;background:var(--bg5);border-radius:4px;overflow:hidden;}
+.ph-row-bar{height:100%;border-radius:4px;transition:width .8s cubic-bezier(.4,0,.2,1);}
+.ph-row-num{font-size:1.1rem;font-weight:800;width:30px;text-align:right;flex-shrink:0;}
+
+/* ── PIC card ── */
+.pic-card{
+  background:var(--bg3);border:1px solid var(--border);
+  border-radius:16px;padding:18px 20px;margin-bottom:14px;
+}
+.pic-bars{display:flex;flex-direction:column;gap:10px;}
+.pic-bar-row{display:flex;align-items:center;gap:12px;}
+.pic-name{font-size:.82rem;font-weight:600;color:var(--dim);width:64px;flex-shrink:0;}
+.pic-bar-track{flex:1;height:12px;background:var(--bg5);border-radius:6px;overflow:hidden;}
+.pic-bar-fill{height:100%;border-radius:6px;transition:width .8s cubic-bezier(.4,0,.2,1);}
+.pic-count{font-size:.85rem;font-weight:700;width:28px;text-align:right;flex-shrink:0;}
+.pic-pct{font-size:.72rem;color:var(--muted);width:38px;text-align:right;flex-shrink:0;}
+
+/* ════════════════════════════
+   STATS BAR
+════════════════════════════ */
+.stats-bar{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;}
+.stat-box{
+  flex:1;min-width:100px;
+  background:var(--bg3);border:1px solid var(--border);
+  border-radius:12px;padding:14px 16px;
+  border-top:3px solid transparent;
+}
+.stat-label{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:5px;}
+.stat-val{font-size:2.2rem;font-weight:800;line-height:1;}
+
+/* ════════════════════════════
+   FILTER BAR
+════════════════════════════ */
+.filter-bar{
+  background:var(--bg3);border:1px solid var(--border);
+  border-radius:12px;padding:12px 16px;margin-bottom:14px;
+  display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;
+}
+.fg{display:flex;flex-direction:column;gap:4px;}
+.fg label{font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);}
+.fg input,.fg select{
+  background:var(--bg2);border:1px solid var(--border);
+  color:var(--text);padding:7px 11px;border-radius:8px;
+  font-size:.8rem;outline:none;font-family:inherit;min-width:130px;
+}
+.fg input:focus,.fg select:focus{border-color:var(--primary);}
+.fg input::placeholder{color:var(--muted);}
+.btn-clear{
+  padding:7px 12px;border-radius:8px;border:1px solid var(--border);
+  background:transparent;color:var(--muted);font-size:.75rem;
+  cursor:pointer;font-family:inherit;transition:.15s;margin-bottom:0;
+}
+.btn-clear:hover{background:rgba(255,255,255,.06);color:var(--text);}
+
+/* ════════════════════════════
+   TABLE
+════════════════════════════ */
+.tbl-card{
+  background:var(--bg3);border:1px solid var(--border);
+  border-radius:16px;overflow:hidden;
+}
+.tbl-topbar{
+  padding:13px 18px;display:flex;justify-content:space-between;align-items:center;
+  border-bottom:1px solid var(--border);background:var(--bg2);
+}
+.tbl-topbar .tt-title{font-size:.8rem;font-weight:600;}
+.tbl-topbar .tt-count{font-size:.72rem;color:var(--muted);}
+.tbl-scroll{overflow-x:auto;max-height:calc(100vh - 330px);}
+.tbl-scroll::-webkit-scrollbar{height:4px;width:4px;}
+.tbl-scroll::-webkit-scrollbar-track{background:transparent;}
+.tbl-scroll::-webkit-scrollbar-thumb{background:var(--bg5);border-radius:2px;}
+table{width:100%;border-collapse:collapse;font-size:.84rem;}
+thead th{
+  position:sticky;top:0;z-index:2;
+  padding:10px 14px;background:var(--bg2);
+  text-align:left;font-size:.7rem;font-weight:700;
+  text-transform:uppercase;letter-spacing:.8px;color:var(--muted);
+  white-space:nowrap;border-bottom:1px solid var(--border);
+}
+tbody td{
+  padding:11px 14px;border-bottom:1px solid var(--border);
+  vertical-align:middle;
+}
+tbody tr:last-child td{border-bottom:none;}
+tbody tr{cursor:pointer;transition:.12s;}
+tbody tr:hover td{background:var(--bg4);}
+.hub-code{
+  color:var(--primary-light);font-weight:700;font-size:.82rem;
+  letter-spacing:.3px;white-space:nowrap;
+}
+.update-cell{
+  max-width:300px;white-space:nowrap;overflow:hidden;
+  text-overflow:ellipsis;color:var(--dim);font-size:.76rem;
+}
+.wk-cell{
+  text-align:center;font-weight:700;font-size:.82rem;
+  color:var(--text);
+}
+.chevron{color:var(--muted);font-size:.8rem;}
+
+/* ════════════════════════════
+   BADGES
+════════════════════════════ */
+.badge{
+  display:inline-block;padding:3px 10px;border-radius:20px;
+  font-size:.68rem;font-weight:700;white-space:nowrap;
+}
+.b-passed {background:rgba(0,230,118,.12);color:#00e676;border:1px solid rgba(0,230,118,.2);}
+.b-pending{background:rgba(255,214,0,.12); color:#ffd600;border:1px solid rgba(255,214,0,.2);}
+.b-failed {background:rgba(255,23,68,.12); color:#ff5252;border:1px solid rgba(255,23,68,.2);}
+.b-pass   {background:rgba(0,230,118,.12);color:#00e676;border:1px solid rgba(0,230,118,.2);}
+.b-fail   {background:rgba(255,23,68,.12); color:#ff5252;border:1px solid rgba(255,23,68,.2);}
+.b-na     {background:rgba(107,138,158,.1);color:var(--muted);border:1px solid rgba(107,138,158,.2);}
+
+/* ════════════════════════════
+   STATUS ICON
+════════════════════════════ */
+.status-wrap{display:inline-flex;align-items:center;gap:7px;}
+.status-ring{
+  width:26px;height:26px;border-radius:50%;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-size:.75rem;border:2px solid;
+}
+.status-text{font-size:.72rem;white-space:nowrap;}
+
+/* ════════════════════════════
+   DETAIL DRAWER
+════════════════════════════ */
+.drawer-bg{
+  display:none;position:fixed;inset:0;
+  background:rgba(0,0,0,.6);z-index:80;backdrop-filter:blur(2px);
+}
+.drawer-bg.open{display:block;}
+.drawer{
+  position:fixed;top:0;right:0;bottom:0;width:360px;
+  background:var(--bg3);border-left:1px solid var(--border);
+  z-index:81;display:flex;flex-direction:column;
+  transform:translateX(100%);transition:.25s cubic-bezier(.4,0,.2,1);
+}
+.drawer.open{transform:translateX(0);}
+.drawer-hd{
+  padding:18px 20px;border-bottom:1px solid var(--border);
+  display:flex;justify-content:space-between;align-items:center;
+}
+.drawer-hd h3{font-size:.95rem;font-weight:700;}
+.drawer-close{
+  width:32px;height:32px;border-radius:8px;border:1px solid var(--border);
+  background:transparent;color:var(--muted);font-size:1rem;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:.15s;
+}
+.drawer-close:hover{background:rgba(255,255,255,.08);color:var(--text);}
+.drawer-body{flex:1;overflow-y:auto;padding:16px 20px;}
+.drawer-body::-webkit-scrollbar{width:4px;}
+.drawer-body::-webkit-scrollbar-thumb{background:var(--bg5);border-radius:2px;}
+.dr{padding:10px 0;border-bottom:1px solid var(--border);}
+.dr:last-child{border-bottom:none;}
+.dr-label{font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:4px;}
+.dr-val{font-size:.83rem;line-height:1.5;color:var(--text);}
+
+/* ════════════════════════════
+   SETUP MODAL
+════════════════════════════ */
+.modal-bg{
+  display:none;position:fixed;inset:0;
+  background:rgba(0,0,0,.75);z-index:100;
+  justify-content:center;align-items:center;
+}
+.modal-bg.open{display:flex;}
+.modal{
+  background:var(--bg3);border:1px solid var(--border);
+  border-radius:20px;padding:28px;
+  width:520px;max-width:96vw;max-height:90vh;overflow-y:auto;
+}
+.modal h2{font-size:1rem;font-weight:700;margin-bottom:18px;}
+.step{
+  display:flex;gap:12px;align-items:flex-start;
+  background:var(--bg2);border-radius:10px;padding:12px 14px;
+  margin-bottom:8px;font-size:.79rem;line-height:1.65;color:var(--muted);
+}
+.step strong{color:var(--text);}
+.step code{
+  background:rgba(255,255,255,.07);padding:1px 6px;
+  border-radius:4px;color:var(--teal);font-size:.74rem;
+}
+.step-n{
+  width:22px;height:22px;border-radius:50%;flex-shrink:0;
+  background:rgba(238,77,45,.18);color:var(--primary);
+  font-size:.7rem;font-weight:800;
+  display:flex;align-items:center;justify-content:center;margin-top:1px;
+}
+.url-inp{
+  width:100%;margin-top:10px;
+  background:var(--bg2);border:1px solid var(--border);
+  color:var(--text);padding:11px 14px;border-radius:10px;
+  font-size:.82rem;outline:none;font-family:inherit;
+}
+.url-inp:focus{border-color:var(--primary);}
+.modal-foot{display:flex;justify-content:flex-end;gap:10px;margin-top:20px;}
+.btn-cyan{background:var(--primary);color:#fff;font-family:inherit;}
+.btn-cyan:hover{background:var(--primary-light);}
+
+/* ════════════════════════════
+   LOADING
+════════════════════════════ */
+.loading-state{
+  display:flex;flex-direction:column;align-items:center;
+  justify-content:center;padding:60px;color:var(--muted);
+}
+.spinner{
+  width:28px;height:28px;border-radius:50%;
+  border:3px solid var(--bg4);border-top-color:var(--primary);
+  animation:spin .7s linear infinite;margin-bottom:14px;
+}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* ════════════════════════════
+   TOAST
+════════════════════════════ */
+.toast{
+  position:fixed;bottom:20px;right:20px;
+  background:var(--bg3);border:1px solid var(--border);
+  border-radius:10px;padding:11px 18px;
+  font-size:.8rem;z-index:200;
+  transform:translateY(60px);opacity:0;transition:.25s;
+  pointer-events:none;
+}
+.toast.show{transform:translateY(0);opacity:1;}
+.toast.ok {border-left:4px solid var(--green);}
+.toast.err{border-left:4px solid var(--red);}
+
+/* ════════════════════════════
+   PAGE HEADING (Phase pages)
+════════════════════════════ */
+.page-heading{
+  border-radius:14px;padding:18px 22px;margin-bottom:16px;
+  border:1px solid var(--border);
+}
+.ph-eyebrow{font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;opacity:.7;margin-bottom:4px;}
+.ph-title{font-size:1.15rem;font-weight:700;}
+.ph-02{background:linear-gradient(120deg,#3d1a10,#7c2d12);color:#ffe8e3;}
+.ph-03{background:linear-gradient(120deg,#2d1c0e,#5c2d0a);color:#ffecd9;}
+
+/* ════════════════════════════
+   DATA MANAGER
+════════════════════════════ */
+.dm-tabs{display:flex;gap:6px;margin-bottom:16px;}
+.dm-tab{
+  padding:8px 20px;border-radius:8px;border:1px solid var(--border);
+  background:transparent;color:var(--muted);font-size:.8rem;font-weight:600;
+  cursor:pointer;font-family:inherit;transition:.15s;
+}
+.dm-tab.active{background:var(--primary);color:#fff;border-color:var(--primary);}
+.dm-tab:not(.active):hover{background:var(--bg4);color:var(--text);}
+.dm-panel{display:none;}
+.dm-panel.active{display:block;}
+
+.paste-area{
+  width:100%;min-height:140px;resize:vertical;
+  background:var(--bg2);border:1px solid var(--border);
+  color:var(--text);padding:14px;border-radius:10px;
+  font-size:.8rem;font-family:'Courier New',monospace;
+  outline:none;line-height:1.6;
+}
+.paste-area:focus{border-color:var(--primary);}
+.paste-area::placeholder{color:var(--muted);}
+.dm-actions{display:flex;gap:10px;margin-top:10px;align-items:center;}
+.btn-primary{background:var(--primary);color:#fff;font-family:inherit;}
+.btn-primary:hover{background:var(--primary-light);}
+.btn-danger{background:rgba(255,59,48,.15);color:#ff3b30;border:1px solid rgba(255,59,48,.3);font-family:inherit;}
+.btn-danger:hover{background:rgba(255,59,48,.25);}
+.parse-hint{font-size:.72rem;color:var(--muted);flex:1;}
+
+.preview-card{
+  background:var(--bg3);border:1px solid var(--border);
+  border-radius:12px;overflow:hidden;margin-top:14px;
+}
+.preview-head{
+  padding:10px 16px;background:var(--bg2);border-bottom:1px solid var(--border);
+  display:flex;justify-content:space-between;align-items:center;
+}
+.preview-head span{font-size:.78rem;font-weight:600;}
+.preview-ok{color:var(--green);font-size:.72rem;}
+.preview-warn{color:var(--yellow);font-size:.72rem;}
+
+.manage-toolbar{
+  display:flex;align-items:center;gap:10px;margin-bottom:12px;
+  background:var(--bg3);border:1px solid var(--border);
+  border-radius:10px;padding:10px 14px;
+}
+.manage-toolbar span{font-size:.78rem;color:var(--muted);flex:1;}
+.cb-row td:first-child{width:36px;text-align:center;}
+input[type=checkbox]{
+  width:15px;height:15px;cursor:pointer;accent-color:var(--primary);
+}
+.src-badge{
+  font-size:.62rem;font-weight:700;padding:2px 7px;border-radius:10px;
+}
+.src-gs{background:rgba(41,121,255,.15);color:#2979ff;border:1px solid rgba(41,121,255,.2);}
+.src-manual{background:rgba(238,77,45,.12);color:var(--primary);border:1px solid rgba(238,77,45,.2);}
+</style>
+</head>
+<body>
+
+<!-- ══════════ SIDEBAR ══════════ -->
+<aside class="sidebar">
+  <div class="brand">
+    <div class="brand-icon">HF</div>
+    <div class="brand-text">
+      <div class="t1">Hub Final</div>
+      <div class="t2">Tracking Dashboard</div>
+    </div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-label">Views</div>
+    <button class="nav-btn active" onclick="go('summary',this)">
+      <span class="nav-icon">📊</span>Executive Summary
+      <span class="nav-badge" id="nb0">—</span>
+    </button>
+    <button class="nav-btn" onclick="go('phase2',this)">
+      <span class="nav-icon">📋</span>Phase 02 Acquisition
+      <span class="nav-badge" id="nb1">—</span>
+    </button>
+    <button class="nav-btn" onclick="go('phase3',this)">
+      <span class="nav-icon">📬</span>Phase 03 Outreach
+      <span class="nav-badge" id="nb2">—</span>
+    </button>
+    <button class="nav-btn" onclick="go('data',this)">
+      <span class="nav-icon">⚙️</span>Data Manager
+      <span class="nav-badge" id="nb3">—</span>
+    </button>
+  </div>
+
+  <div class="nav-divider"></div>
+  <div class="nav-section">
+    <div class="nav-label">Actions</div>
+    <button class="nav-btn" onclick="loadData()">
+      <span class="nav-icon">↻</span>Refresh Data
+    </button>
+  </div>
+
+  <div class="sidebar-bottom">
+    <div class="conn-pill">
+      <div class="dot wait" id="connDot"></div>
+      <span id="connLabel">Not connected</span>
+    </div>
+    <button class="btn-setup" onclick="openSetup()">⚙ Setup / Connect</button>
+  </div>
+</aside>
+
+<!-- ══════════ MAIN ══════════ -->
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-left">
+      <h2 id="pageTitle">Executive Summary</h2>
+      <p id="pageSub">Hub Operational Tracking Dashboard</p>
+    </div>
+    <div class="topbar-right">
+      <span class="view-badge">👁 View Only</span>
+      <button class="btn btn-ghost btn-sm" onclick="loadData()">↻ Refresh</button>
+    </div>
+  </div>
+
+  <div class="scroll-area">
+
+    <!-- ── PAGE: Executive Summary ── -->
+    <div class="page active" id="page-summary">
+
+      <!-- KPI Strip -->
+      <div class="kpi-strip">
+        <div class="kpi-card" onclick="scrollToTable()">
+          <div class="kpi-icon">🏢</div>
+          <div class="kpi-val" id="kTotal" style="color:var(--primary)">—</div>
+          <div class="kpi-label">Total Active Hubs</div>
+          <div class="kpi-prog"><div class="kpi-prog-fill" id="kTotalBar" style="background:var(--primary);width:100%"></div></div>
+        </div>
+        <div class="kpi-card" onclick="goNav('phase2')">
+          <div class="kpi-icon">🔍</div>
+          <div class="kpi-val" id="kP2" style="color:#2979ff">—</div>
+          <div class="kpi-label">In Acquisition →</div>
+          <div class="kpi-prog"><div class="kpi-prog-fill" id="kP2bar" style="background:#2979ff;width:0%"></div></div>
+        </div>
+        <div class="kpi-card" onclick="goNav('phase3')">
+          <div class="kpi-icon">📬</div>
+          <div class="kpi-val" id="kP3" style="color:#9c6dff">—</div>
+          <div class="kpi-label">In Outreach Pipeline →</div>
+          <div class="kpi-prog"><div class="kpi-prog-fill" id="kP3bar" style="background:#9c6dff;width:0%"></div></div>
+        </div>
+        <div class="kpi-card" onclick="goNav('phase3')">
+          <div class="kpi-icon">✅</div>
+          <div class="kpi-val" id="kDone" style="color:var(--green)">—</div>
+          <div class="kpi-label">Operational / Done →</div>
+          <div class="kpi-prog"><div class="kpi-prog-fill" id="kDonebar" style="background:var(--green);width:0%"></div></div>
+        </div>
+      </div>
+
+      <!-- Charts Row -->
+      <div class="charts-row">
+        <div class="chart-card">
+          <div class="cc-head">Status Mix</div>
+          <div class="donut-wrap">
+            <svg id="donutSvg" viewBox="0 0 140 140" width="140" height="140"></svg>
+            <div class="donut-center">
+              <div class="dn" id="donutNum">—</div>
+              <div class="ds">Hubs</div>
+            </div>
+          </div>
+          <div class="donut-legend" id="donutLegend"></div>
+        </div>
+        <div class="chart-card">
+          <div class="cc-head">Phase 02 · Acquisition <span class="cc-chip" id="p2chip">—</span></div>
+          <div id="p2items"></div>
+        </div>
+        <div class="chart-card">
+          <div class="cc-head">Phase 03 · Outreach <span class="cc-chip" id="p3chip">—</span></div>
+          <div id="p3items"></div>
+        </div>
+      </div>
+
+      <!-- PIC Breakdown -->
+      <div class="pic-card">
+        <div class="cc-head">Inspector PIC Performance</div>
+        <div class="pic-bars" id="picBars"></div>
+      </div>
+
+      <!-- Filter -->
+      <div class="filter-bar">
+        <div class="fg">
+          <label>Search</label>
+          <input type="text" id="es-q" placeholder="Hub Code, Update, District…" oninput="renderSummaryTbl()">
+        </div>
+        <div class="fg">
+          <label>Area</label>
+          <select id="es-area" onchange="renderSummaryTbl()"><option value="">All</option></select>
+        </div>
+        <div class="fg">
+          <label>PIC</label>
+          <select id="es-pic" onchange="renderSummaryTbl()"><option value="">All</option></select>
+        </div>
+        <div class="fg">
+          <label>Survey Results</label>
+          <select id="es-sr" onchange="renderSummaryTbl()">
+            <option value="">All</option><option>Passed</option><option>Pending</option><option>Failed</option>
+          </select>
+        </div>
+        <button class="btn-clear" onclick="clr('es')">✕ Clear</button>
+      </div>
+
+      <div class="tbl-card">
+        <div class="tbl-topbar">
+          <span class="tt-title">All Active Hubs</span>
+          <span class="tt-count" id="es-count">—</span>
+        </div>
+        <div class="tbl-scroll">
+          <table>
+            <thead><tr>
+              <th style="background:#2b2b2b;color:#fff">Hub Code</th>
+              <th style="background:#c9d6df;color:#333">hub tier</th>
+              <th style="background:#e8a0a0;color:#1a1a1a">Daily Update</th>
+              <th style="background:#003580;color:#fff">Week</th>
+              <th style="background:#003580;color:#fff">Year</th>
+              <th style="background:#00a650;color:#fff">Survey results</th>
+              <th style="background:#00a650;color:#fff">Final Results</th>
+              <th style="background:#d0d0d0;color:#222">Over all Hub status</th>
+              <th style="background:#d0d0d0;color:#222">Inspector PIC</th>
+              <th style="background:var(--bg2)"></th>
+            </tr></thead>
+            <tbody id="es-tbody">
+              <tr><td colspan="10"><div class="loading-state"><div class="spinner"></div>Please connect via ⚙ Setup</div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── PAGE: Phase 02 ── -->
+    <div class="page" id="page-phase2">
+      <div class="page-heading ph-02">
+        <div class="ph-eyebrow">Page 02 / 03</div>
+        <div class="ph-title">Phase 02: Acquisition &amp; Assessment Phase</div>
+      </div>
+      <div class="stats-bar" id="p2stats"></div>
+      <div class="filter-bar">
+        <div class="fg">
+          <label>Search</label>
+          <input type="text" id="p2-q" placeholder="Hub / Update…" oninput="renderP2()">
+        </div>
+        <div class="fg">
+          <label>Status</label>
+          <select id="p2-s" onchange="renderP2()">
+            <option value="">All</option>
+            <option>Pending LL</option><option>Pending RM decision</option><option>Pending discussion</option><option>Pending Survey</option><option>Pending Inspection</option><option>Pending StX</option><option>Pending Negotiation</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label>PIC</label>
+          <select id="p2-p" onchange="renderP2()"><option value="">All</option></select>
+        </div>
+        <button class="btn-clear" onclick="clr('p2')">✕ Clear</button>
+      </div>
+      <div class="tbl-card">
+        <div class="tbl-topbar">
+          <span class="tt-title">Acquisition &amp; Assessment</span>
+          <span class="tt-count" id="p2-count">—</span>
+        </div>
+        <div class="tbl-scroll">
+          <table>
+            <thead><tr>
+              <th style="background:#2b2b2b;color:#fff">Hub Code</th>
+              <th style="background:#c9d6df;color:#333">hub tier</th>
+              <th style="background:#e8a0a0;color:#1a1a1a">Daily Update</th>
+              <th style="background:#003580;color:#fff">Week</th>
+              <th style="background:#003580;color:#fff">Year</th>
+              <th style="background:#00a650;color:#fff">Survey results</th>
+              <th style="background:#00a650;color:#fff">Final Results</th>
+              <th style="background:#d0d0d0;color:#222">Over all Hub status</th>
+              <th style="background:#d0d0d0;color:#222">Inspector PIC</th>
+              <th style="background:var(--bg2)"></th>
+            </tr></thead>
+            <tbody id="p2-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── PAGE: Phase 03 ── -->
+    <div class="page" id="page-phase3">
+      <div class="page-heading ph-03">
+        <div class="ph-eyebrow">Page 03 / 03</div>
+        <div class="ph-title">Phase 03: Proposal &amp; Outreach Pipeline</div>
+      </div>
+      <div class="stats-bar" id="p3stats"></div>
+      <div class="filter-bar">
+        <div class="fg">
+          <label>Search</label>
+          <input type="text" id="p3-q" placeholder="Hub / Update…" oninput="renderP3()">
+        </div>
+        <div class="fg">
+          <label>Status</label>
+          <select id="p3-s" onchange="renderP3()">
+            <option value="">All</option>
+            <option>Pending propose</option><option>Pending Open E-mail</option>
+            <option>Pending approved Email</option><option>Open line group</option>
+            <option>Done</option><option>Extend current property</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label>PIC</label>
+          <select id="p3-p" onchange="renderP3()"><option value="">All</option></select>
+        </div>
+        <button class="btn-clear" onclick="clr('p3')">✕ Clear</button>
+      </div>
+      <div class="tbl-card">
+        <div class="tbl-topbar">
+          <span class="tt-title">Proposal &amp; Completion</span>
+          <span class="tt-count" id="p3-count">—</span>
+        </div>
+        <div class="tbl-scroll">
+          <table>
+            <thead><tr>
+              <th style="background:#2b2b2b;color:#fff">Hub Code</th>
+              <th style="background:#c9d6df;color:#333">hub tier</th>
+              <th style="background:#e8a0a0;color:#1a1a1a">Daily Update</th>
+              <th style="background:#003580;color:#fff">Week</th>
+              <th style="background:#003580;color:#fff">Year</th>
+              <th style="background:#00a650;color:#fff">Survey results</th>
+              <th style="background:#00a650;color:#fff">Final Results</th>
+              <th style="background:#d0d0d0;color:#222">Over all Hub status</th>
+              <th style="background:#d0d0d0;color:#222">Inspector PIC</th>
+              <th style="background:var(--bg2)"></th>
+            </tr></thead>
+            <tbody id="p3-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── PAGE: Data Manager ── -->
+    <div class="page" id="page-data">
+      <div class="page-heading" style="background:linear-gradient(120deg,#1a1a2e,#2d1b4e);color:#e8d8ff;border:none;margin-bottom:16px;">
+        <div class="ph-eyebrow">Page 04 / 04</div>
+        <div class="ph-title">⚙️ Data Manager</div>
+      </div>
+
+      <div class="dm-tabs">
+        <button class="dm-tab active" onclick="dmSwitch('import',this)">📥 นำเข้าข้อมูล</button>
+        <button class="dm-tab" onclick="dmSwitch('manage',this)">🗑 จัดการ / ลบข้อมูล</button>
+      </div>
+
+      <!-- ── Import Panel ── -->
+      <div class="dm-panel active" id="dm-import">
+        <div class="tbl-card" style="padding:18px 20px;margin-bottom:14px;">
+          <div style="font-size:.85rem;font-weight:700;margin-bottom:6px;color:var(--text)">วางข้อมูลจาก Google Sheet</div>
+          <div style="font-size:.75rem;color:var(--muted);margin-bottom:12px;">คัดลอก (Ctrl+C) หลายแถวจากตารางหลัก แล้ววางตรงนี้ได้เลย — ระบบจะแยกเป็นเคสอัตโนมัติ</div>
+          <textarea class="paste-area" id="pasteInput"
+            placeholder="AMBRI-A&#9;GBKK-N&#9;เขตมีนบุรี&#9;6W issue&#9;pending discuss...&#9;9&#9;2026&#9;Pending&#9;Pending&#9;Pending discussion&#9;Ball&#9;Pass&#9;"></textarea>
+          <div class="dm-actions">
+            <button class="btn btn-primary" onclick="parsePaste()">🔍 แยกข้อมูล</button>
+            <button class="btn btn-ghost" onclick="document.getElementById('pasteInput').value='';document.getElementById('importPreview').innerHTML=''">✕ ล้าง</button>
+            <span class="parse-hint" id="parseHint">รองรับ 13 คอลัมน์ตามตารางหลัก</span>
+          </div>
+        </div>
+        <div id="importPreview"></div>
+      </div>
+
+      <!-- ── Manage Panel ── -->
+      <div class="dm-panel" id="dm-manage">
+        <div class="manage-toolbar">
+          <input type="checkbox" id="selectAll" onchange="toggleSelectAll(this.checked)">
+          <span id="manageCount">— records</span>
+          <button class="btn btn-danger btn-sm" onclick="deleteSelected()">🗑 ลบที่เลือก</button>
+          <button class="btn btn-ghost btn-sm" onclick="restoreAll()">↺ คืนค่าทั้งหมด</button>
+        </div>
+        <div class="tbl-card">
+          <div class="tbl-scroll">
+            <table>
+              <thead><tr>
+                <th></th>
+                <th>Hub Code</th><th>Area</th><th>Status</th><th>PIC</th><th>Wk</th><th>Source</th>
+              </tr></thead>
+              <tbody id="manage-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /scroll-area -->
+</div><!-- /main -->
+
+<!-- ══════════ SETUP MODAL ══════════ -->
+<div class="modal-bg" id="setupBg">
+  <div class="modal">
+    <h2>⚙ Connect to Google Sheets</h2>
+    <div class="step"><div class="step-n">1</div><div>เปิด <strong>Sheet หลัก</strong> → Copy <strong>Sheet ID</strong> จาก URL<br><code>spreadsheets/d/<strong>SHEET_ID</strong>/edit</code></div></div>
+    <div class="step"><div class="step-n">2</div><div>สร้าง <strong>Google Sheet ใหม่ (ว่างๆ)</strong> → Extensions → Apps Script<br>วาง <code>Code.gs</code> ทั้งหมด (ใส่ Sheet ID แล้ว) → Save</div></div>
+    <div class="step"><div class="step-n">3</div><div><strong>Deploy → New deployment → Web app</strong><br>Execute as: <strong>Me</strong> | Access: <strong>Anyone</strong> → Copy URL</div></div>
+    <div class="step"><div class="step-n">4</div><div>วาง URL ด้านล่าง → <strong>Connect</strong></div></div>
+    <label style="font-size:.7rem;color:var(--muted);font-weight:600">Web App URL</label>
+    <input class="url-inp" type="text" id="urlInput" placeholder="https://script.google.com/macros/s/…/exec">
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeBg('setupBg')">Cancel</button>
+      <button class="btn btn-cyan" onclick="saveSetup()">Connect</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ DETAIL DRAWER ══════════ -->
+<div class="drawer-bg" id="drawerBg" onclick="closeDrawer()"></div>
+<div class="drawer" id="drawer">
+  <div class="drawer-hd">
+    <h3 id="drawerTitle">Hub Detail</h3>
+    <button class="drawer-close" onclick="closeDrawer()">✕</button>
+  </div>
+  <div class="drawer-body" id="drawerBody"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ── Constants ── */
+const PHASE2 = ['Pending LL','Pending RM decision','Pending discussion','Pending Survey','Pending Inspection','Pending StX','Pending Lead','Pending Negotiation'];
+const PHASE3 = ['Pending propose','Pending Open E-mail','Pending approved Email','Open line group','Done','Extend current property'];
+const SC = {
+  'Pending LL':              '#ff6d00',
+  'Pending RM decision':     '#f50057',
+  'Pending discussion':      '#00bcd4',
+  'Pending Survey':          '#9c6dff',
+  'Pending Inspection':      '#9c6dff',
+  'Pending StX':             '#ff9100',
+  'Pending Lead':            '#ff6d00',
+  'Pending Negotiation':     '#f50057',
+  'Pending propose':         '#9c6dff',
+  'Pending Open E-mail':     '#ffd600',
+  'Pending approved Email':  '#2979ff',
+  'Open line group':         '#00e676',
+  'Done':                    '#00e676',
+  'Extend current property': '#00ba7c',
+};
+const SI = {
+  'Pending LL':'↺','Pending RM decision':'⚡','Pending discussion':'💬','Pending Survey':'🔍',
+  'Pending Inspection':'🔍','Pending StX':'⏳','Pending Lead':'📌','Pending Negotiation':'🤝',
+  'Pending propose':'📋','Pending Open E-mail':'✉','Pending approved Email':'✓',
+  'Open line group':'✔','Done':'✔','Extend current property':'↗',
+};
+const PM = {
+  summary:{ title:'Executive Summary',    sub:'Hub Operational Tracking Dashboard' },
+  phase2: { title:'Phase 02 Acquisition', sub:'Acquisition & Assessment Phase' },
+  phase3: { title:'Phase 03 Outreach',    sub:'Proposal & Outreach Pipeline' },
+  data:   { title:'Data Manager',         sub:'นำเข้า & จัดการข้อมูล' },
+};
+const COL_MAP = ['hubCode','area','district','hubDirection','dailyUpdate','week','year',
+  'surveyResults','finalResults','overallHubStatus','inspectorPIC','surveyStatus','reviseEmail'];
+const MANUAL_KEY  = 'hubManualRows';
+const DELETED_KEY = 'hubDeletedIds';
+let manualRows  = JSON.parse(localStorage.getItem(MANUAL_KEY)||'[]');
+let deletedIds  = new Set(JSON.parse(localStorage.getItem(DELETED_KEY)||'[]'));
+let fetchedRows = [];
+
+/* ── State ── */
+let rows = [];
+const URL_KEY = 'hubTrackerURL';
+const DEFAULT_URL = 'https://script.google.com/macros/s/AKfycbyevHBc-FBwftdSRUiGB9VFZ5oOR46gXnyEvYmJ5ZQ5ElkQvKR1hYVsJ0NcVgPzCvrlsQ/exec';
+localStorage.setItem(URL_KEY, DEFAULT_URL);
+let SURL = DEFAULT_URL;
+
+/* ── Boot ── */
+addEventListener('DOMContentLoaded', () => {
+  document.getElementById('urlInput').value = SURL;
+  if (SURL) loadData(); else openSetup();
+});
+
+/* ── Nav ── */
+function go(id, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  el.classList.add('active');
+  document.getElementById('pageTitle').textContent = PM[id].title;
+  document.getElementById('pageSub').textContent   = PM[id].sub;
+}
+function goNav(id) {
+  const btn = document.querySelector(`.nav-btn[onclick="go('${id}',this)"]`);
+  if (btn) go(id, btn);
+}
+function scrollToTable() {
+  document.getElementById('es-tbody').closest('.tbl-card').scrollIntoView({behavior:'smooth'});
+}
+
+/* ── Setup ── */
+function openSetup()  { document.getElementById('setupBg').classList.add('open'); }
+function closeBg(id)  { document.getElementById(id).classList.remove('open'); }
+function saveSetup() {
+  const u = document.getElementById('urlInput').value.trim();
+  if (!u) { toast('Please enter URL','err'); return; }
+  SURL = u; localStorage.setItem(URL_KEY, u);
+  closeBg('setupBg'); loadData();
+}
+
+/* ── Load ── */
+async function loadData() {
+  if (!SURL) { openSetup(); return; }
+  setConn('wait');
+  setTbody('es-tbody', 10, 'Loading from Google Sheets…');
+  try {
+    const r = await fetch(SURL + '?action=getData');
+    const j = await r.json();
+    if (j.error) throw new Error(j.error);
+    fetchedRows = j.data || [];
+    mergeRows();
+    setConn('on');
+    renderAll();
+    toast('Loaded ' + rows.length + ' hubs', 'ok');
+  } catch(e) {
+    setConn('off');
+    setTbody('es-tbody', 10, 'Connection failed — ' + e.message, true);
+    toast('Connection failed', 'err');
+  }
+}
+
+function setConn(s) {
+  const d = document.getElementById('connDot');
+  const l = document.getElementById('connLabel');
+  d.className = 'dot ' + s;
+  l.textContent = s==='on' ? 'Connected' : s==='wait' ? 'Connecting…' : 'Disconnected';
+}
+
+function setTbody(id, cols, msg, err) {
+  document.getElementById(id).innerHTML =
+    `<tr><td colspan="${cols}"><div class="loading-state" style="${err?'color:#ff5252':''}">`+
+    (err?'':'<div class="spinner"></div>')+msg+'</div></td></tr>';
+}
+
+/* ── Merge rows ── */
+function mergeRows() {
+  const combined = [
+    ...fetchedRows.map(r=>({...r,_src:'gs'})),
+    ...manualRows.map(r=>({...r,_src:'manual'}))
+  ];
+  rows = combined.filter(r => !deletedIds.has(r.hubCode+'__'+r._src));
+}
+
+/* ── Render all ── */
+function renderAll() {
+  renderExecCards();
+  renderSummaryTbl();
+  renderP2();
+  renderP3();
+  setBadges();
+  setFilters();
+}
+
+/* ── Executive cards ── */
+function renderExecCards() {
+  const total = rows.length;
+  const C     = cnt();
+  const done  = C['Open line group'] || 0;
+  const p2t   = PHASE2.reduce((s,k)=>s+(C[k]||0),0);
+  const p3t   = PHASE3.reduce((s,k)=>s+(C[k]||0),0);
+
+  // KPI strip
+  document.getElementById('kTotal').textContent = total;
+  document.getElementById('kP2').textContent    = pad(p2t);
+  document.getElementById('kP3').textContent    = pad(p3t);
+  document.getElementById('kDone').textContent  = pad(done);
+  setTimeout(()=>{
+    document.getElementById('kP2bar').style.width   = total?(p2t/total*100)+'%':'0%';
+    document.getElementById('kP3bar').style.width   = total?(p3t/total*100)+'%':'0%';
+    document.getElementById('kDonebar').style.width = total?(done/total*100)+'%':'0%';
+  }, 80);
+
+  // Phase items with bars
+  document.getElementById('p2chip').textContent = p2t;
+  document.getElementById('p3chip').textContent = p3t;
+  document.getElementById('p2items').innerHTML = PHASE2.map(s=>phItem(s,C[s]||0,p2t)).join('');
+  document.getElementById('p3items').innerHTML = PHASE3.map(s=>phItem(s,C[s]||0,p3t)).join('');
+
+  // Donut chart
+  renderDonut(C, total);
+
+  // PIC bars
+  renderPICBars(C);
+}
+
+function phItem(s, n, tot) {
+  const col = SC[s]||'#6b8a9e';
+  const pct = tot>0 ? (n/tot*100) : 0;
+  const icon= SI[s]||'●';
+  return `<div class="ph-row">
+    <span class="ph-row-icon">${icon}</span>
+    <span class="ph-row-label">${s}</span>
+    <div class="ph-row-bar-wrap">
+      <div class="ph-row-bar" data-w="${pct}" style="background:${col};width:0%"></div>
+    </div>
+    <span class="ph-row-num" style="color:${col}">${pad(n)}</span>
+  </div>`;
+}
+
+function renderDonut(C, total) {
+  const allStatus = [...PHASE2,...PHASE3];
+  const cx=70,cy=70,r=52,sw=16;
+  const circ = 2*Math.PI*r;
+  let offset = 0;
+  const segments = allStatus.map(s=>{
+    const n=C[s]||0;
+    const dash=(total>0)?(n/total*circ):0;
+    const el=`<circle cx="${cx}" cy="${cy}" r="${r}" fill="none"
+      stroke="${SC[s]||'#555'}" stroke-width="${sw}"
+      stroke-dasharray="${dash} ${circ-dash}"
+      stroke-dashoffset="${circ/4-offset}"
+      style="transition:stroke-dasharray .8s"/>`;
+    offset+=dash;
+    return el;
+  });
+  document.getElementById('donutSvg').innerHTML =
+    `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${'var(--bg5)'}" stroke-width="${sw}"/>` +
+    segments.join('');
+  document.getElementById('donutNum').textContent = total;
+
+  // Legend — show top 5 by count
+  const sorted = allStatus.map(s=>({s,n:C[s]||0})).filter(x=>x.n>0).sort((a,b)=>b.n-a.n).slice(0,6);
+  document.getElementById('donutLegend').innerHTML = sorted.map(({s,n})=>`
+    <div class="dl-item">
+      <div class="dl-dot" style="background:${SC[s]||'#555'}"></div>
+      <span class="dl-label">${s}</span>
+      <span class="dl-val" style="color:${SC[s]||'#555'}">${pad(n)}</span>
+    </div>`).join('');
+}
+
+function renderPICBars(C) {
+  const picMap={};
+  rows.forEach(r=>{ if(r.inspectorPIC) picMap[r.inspectorPIC]=(picMap[r.inspectorPIC]||0)+1; });
+  const total=rows.length;
+  const picColors=['#ee4d2d','#2979ff','#9c6dff','#00ba7c','#ffb800','#00bcd4'];
+  const sorted=Object.entries(picMap).sort((a,b)=>b[1]-a[1]);
+  const max=sorted[0]?sorted[0][1]:1;
+  document.getElementById('picBars').innerHTML = sorted.map(([name,n],i)=>{
+    const col=picColors[i%picColors.length];
+    const pct=(n/max*100).toFixed(0);
+    const pctTotal=(n/total*100).toFixed(0);
+    return `<div class="pic-bar-row">
+      <span class="pic-name">${name}</span>
+      <div class="pic-bar-track">
+        <div class="pic-bar-fill" data-w="${pct}" style="background:${col};width:0%"></div>
+      </div>
+      <span class="pic-count" style="color:${col}">${n}</span>
+      <span class="pic-pct">${pctTotal}%</span>
+    </div>`;
+  }).join('');
+  // Animate bars
+  setTimeout(()=>{
+    document.querySelectorAll('.ph-row-bar[data-w]').forEach(el=>{el.style.width=el.dataset.w+'%';});
+    document.querySelectorAll('.pic-bar-fill[data-w]').forEach(el=>{el.style.width=el.dataset.w+'%';});
+  }, 80);
+}
+
+/* ── Shared row renderer (all 3 pages use same columns) ── */
+function tierColor(t) {
+  if (!t||t==='—') return 'var(--muted)';
+  const v = t.toLowerCase();
+  return v==='large'?'#ee4d2d': v==='medium'?'#ffb800': v==='small'?'#2979ff':'var(--fg)';
+}
+function hubRow(r) {
+  const tier = r.tier || '—';
+  return `<tr onclick="openDrawer(${r.rowIndex})">
+    <td><span class="hub-code">${e(r.hubCode)}</span></td>
+    <td style="text-align:center;font-weight:700;font-size:.78rem;color:${tierColor(tier)}">${tier}</td>
+    <td><div class="update-cell" title="${e(r.dailyUpdate)}">${e(r.dailyUpdate)||'—'}</div></td>
+    <td class="wk-cell">${r.week||'—'}</td>
+    <td style="text-align:center;color:var(--muted)">${r.year||'—'}</td>
+    <td>${bsr(r.surveyResults)}</td>
+    <td>${bsr(r.finalResults)}</td>
+    <td>${si(r.overallHubStatus)}</td>
+    <td>${e(r.inspectorPIC)||'—'}</td>
+    <td class="chevron">›</td>
+  </tr>`;
+}
+
+/* ── Summary table ── */
+function renderSummaryTbl() {
+  const q  = val('es-q').toLowerCase();
+  const fa = val('es-area'), fp = val('es-pic'), fs = val('es-sr');
+  const d  = rows.filter(r => {
+    if (fa && r.area         !== fa) return false;
+    if (fp && r.inspectorPIC !== fp) return false;
+    if (fs && r.surveyResults!== fs) return false;
+    if (q  && ![r.hubCode,r.dailyUpdate,r.district,r.overallHubStatus].join(' ').toLowerCase().includes(q)) return false;
+    return true;
+  });
+  document.getElementById('es-count').textContent = d.length + ' records';
+  document.getElementById('es-tbody').innerHTML = d.map(hubRow).join('') || empty(10);
+}
+
+/* ── Phase 02 ── */
+function renderP2() {
+  const q=val('p2-q').toLowerCase(), fs=val('p2-s'), fp=val('p2-p');
+  const d = rows.filter(r=>{
+    if (!PHASE2.includes(r.overallHubStatus)) return false;
+    if (fs && r.overallHubStatus!==fs) return false;
+    if (fp && r.inspectorPIC!==fp) return false;
+    if (q && ![r.hubCode,r.dailyUpdate].join(' ').toLowerCase().includes(q)) return false;
+    return true;
+  });
+  const C=cnt(), tot=PHASE2.reduce((s,k)=>s+(C[k]||0),0);
+  document.getElementById('p2stats').innerHTML=[
+    ...PHASE2.map(s=>({l:s,v:C[s]||0,c:SC[s]||'#6b8a9e'})).filter(s=>s.v>0),
+    {l:'Phase Total',v:tot,c:'#00bcd4'}
+  ].map(s=>`<div class="stat-box" style="border-top-color:${s.c}">
+    <div class="stat-label">${s.l}</div>
+    <div class="stat-val" style="color:${s.c}">${pad(s.v)}</div>
+  </div>`).join('');
+  document.getElementById('p2-count').textContent = d.length+' sites';
+  document.getElementById('p2-tbody').innerHTML = d.map(hubRow).join('') || empty(10);
+}
+
+/* ── Phase 03 ── */
+function renderP3() {
+  const q=val('p3-q').toLowerCase(), fs=val('p3-s'), fp=val('p3-p');
+  const d = rows.filter(r=>{
+    if (!PHASE3.includes(r.overallHubStatus)) return false;
+    if (fs && r.overallHubStatus!==fs) return false;
+    if (fp && r.inspectorPIC!==fp) return false;
+    if (q && ![r.hubCode,r.dailyUpdate].join(' ').toLowerCase().includes(q)) return false;
+    return true;
+  });
+  const C=cnt(), tot=PHASE3.reduce((s,k)=>s+(C[k]||0),0);
+  document.getElementById('p3stats').innerHTML=[
+    ...PHASE3.map(s=>({l:s,v:C[s]||0,c:SC[s]||'#6b8a9e'})).filter(s=>s.v>0),
+    {l:'Phase Total',v:tot,c:'#00bcd4'}
+  ].map(s=>`<div class="stat-box" style="border-top-color:${s.c}">
+    <div class="stat-label">${s.l}</div>
+    <div class="stat-val" style="color:${s.c}">${pad(s.v)}</div>
+  </div>`).join('');
+  document.getElementById('p3-count').textContent = d.length+' sites';
+  document.getElementById('p3-tbody').innerHTML = d.map(hubRow).join('') || empty(10);
+}
+
+/* ── Drawer ── */
+function openDrawer(idx) {
+  const r = rows.find(x=>x.rowIndex===idx); if(!r) return;
+  document.getElementById('drawerTitle').textContent = r.hubCode;
+  document.getElementById('drawerBody').innerHTML = [
+    ['Hub Code',       r.hubCode],
+    ['Hub Tier',       r.tier],
+    ['Area',           r.area],
+    ['District',       r.district],
+    ['Hub Direction',  r.hubDirection],
+    ['Week / Year',    (r.week||'—')+' / '+(r.year||'—')],
+    ['Daily Update',   r.dailyUpdate],
+    ['Survey results', bsr(r.surveyResults)],
+    ['Final Results',  bsr(r.finalResults)],
+    ['Over all Hub status', si(r.overallHubStatus)],
+    ['Inspector PIC',  r.inspectorPIC],
+    ['Survey Status',  bss(r.surveyStatus)],
+    ['Revise Email',   r.reviseEmail],
+  ].map(([k,v])=>`<div class="dr">
+    <div class="dr-label">${k}</div>
+    <div class="dr-val">${v||'<span style="color:var(--muted)">—</span>'}</div>
+  </div>`).join('');
+  document.getElementById('drawerBg').classList.add('open');
+  document.getElementById('drawer').classList.add('open');
+}
+function closeDrawer(){
+  document.getElementById('drawerBg').classList.remove('open');
+  document.getElementById('drawer').classList.remove('open');
+}
+
+/* ── Badges & Nav ── */
+function setBadges(){
+  document.getElementById('nb0').textContent = rows.length;
+  document.getElementById('nb1').textContent = rows.filter(r=>PHASE2.includes(r.overallHubStatus)).length;
+  document.getElementById('nb2').textContent = rows.filter(r=>PHASE3.includes(r.overallHubStatus)).length;
+  document.getElementById('nb3').textContent = manualRows.length + (deletedIds.size ? ' / -'+deletedIds.size : '');
+}
+function setFilters(){
+  const areas = uniq(rows.map(r=>r.area));
+  const pics  = uniq(rows.map(r=>r.inspectorPIC));
+  const ao = '<option value="">All</option>'+areas.map(a=>`<option>${a}</option>`).join('');
+  const po = '<option value="">All</option>'+pics.map(p=>`<option>${p}</option>`).join('');
+  document.getElementById('es-area').innerHTML = ao;
+  ['es-pic','p2-p','p3-p'].forEach(id=>document.getElementById(id).innerHTML=po);
+}
+function clr(p) {
+  if(p==='es'){['es-q','es-area','es-pic','es-sr'].forEach(id=>document.getElementById(id).value='');renderSummaryTbl();}
+  else if(p==='p2'){['p2-q','p2-s','p2-p'].forEach(id=>document.getElementById(id).value='');renderP2();}
+  else{['p3-q','p3-s','p3-p'].forEach(id=>document.getElementById(id).value='');renderP3();}
+}
+
+/* ── Helpers ── */
+const e   = v => String(v||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const val = id => document.getElementById(id).value;
+const pad = n  => String(n).padStart(2,'0');
+const cnt = () => {const C={};rows.forEach(r=>{if(r.overallHubStatus)C[r.overallHubStatus]=(C[r.overallHubStatus]||0)+1;});return C;};
+const uniq= arr=> [...new Set(arr.filter(Boolean))].sort();
+const empty= cols => `<tr><td colspan="${cols}"><div class="loading-state">No data matched</div></td></tr>`;
+
+function bsr(v) {
+  if(!v) return '<span style="color:var(--muted)">—</span>';
+  const m={Passed:'passed',Failed:'failed','N/A':'na'};
+  return `<span class="badge b-${m[v]||'pending'}">${v}</span>`;
+}
+function bss(v) {
+  if(!v) return '<span style="color:var(--muted)">—</span>';
+  return `<span class="badge b-${v==='Pass'?'pass':v==='Fail'?'fail':'pending'}">${v}</span>`;
+}
+function si(v) {
+  if(!v) return '<span style="color:var(--muted)">—</span>';
+  const c=SC[v]||'#6b8a9e', ic=SI[v]||'●';
+  return `<span class="status-wrap">
+    <span class="status-ring" style="border-color:${c};color:${c}">${ic}</span>
+    <span class="status-text" style="color:${c}">${v}</span>
+  </span>`;
+}
+
+/* ══════════════════════════════
+   DATA MANAGER
+══════════════════════════════ */
+function dmSwitch(panel, btn) {
+  document.querySelectorAll('.dm-tab').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.dm-panel').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('dm-'+panel).classList.add('active');
+  if (panel==='manage') renderManage();
+}
+
+/* ── TSV parser (handles quoted multiline cells) ── */
+function parseTSV(raw) {
+  const rows = [];
+  let row = [], field = '', inQ = false;
+  for (let i = 0; i < raw.length; i++) {
+    const ch = raw[i], nx = raw[i+1];
+    if (inQ) {
+      if (ch==='"' && nx==='"') { field+='"'; i++; }
+      else if (ch==='"') inQ = false;
+      else field += ch;
+    } else {
+      if (ch==='"') { inQ=true; }
+      else if (ch==='\t') { row.push(field); field=''; }
+      else if (ch==='\r'&&nx==='\n') { row.push(field); field=''; if(row.some(f=>f.trim())) rows.push(row); row=[]; i++; }
+      else if (ch==='\n'||ch==='\r') { row.push(field); field=''; if(row.some(f=>f.trim())) rows.push(row); row=[]; }
+      else field += ch;
+    }
+  }
+  row.push(field);
+  if (row.some(f=>f.trim())) rows.push(row);
+  return rows;
+}
+
+/* ── Smart row parser ── */
+function smartDetectRow(cols, idx) {
+  // Clean formula errors and trim
+  const g = i => {
+    const v = (cols[i]||'').trim();
+    return (v==='#N/A'||v==='#DIV/0!'||v==='#REF!'||v==='#VALUE!'||v==='#NAME?') ? '' : v;
+  };
+  const ALL_STATUS = [...PHASE2,...PHASE3];
+
+  // 1a. Find Overall Hub Status — exact match first
+  let statusIdx = cols.findIndex(c => ALL_STATUS.includes(c.trim()));
+
+  // 1b. Fallback: any "Pending …" or "Done" or "Extend …" cell that has numeric week context
+  if (statusIdx < 0) {
+    statusIdx = cols.findIndex((c, i) => {
+      const v = c.trim();
+      if (!(/^(Pending |Done$|Extend |Open line)/i.test(v))) return false;
+      // verify numeric neighbours: g(i-5) should be week-like
+      const wk = (cols[i-5]||'').trim();
+      return /^\d{1,2}$/.test(wk);
+    });
+  }
+  if (statusIdx < 0) return null;
+
+  // 2. Extract fields relative to statusIdx
+  const overallHubStatus = g(statusIdx);
+  const inspectorPIC     = g(statusIdx + 1);
+  const surveyStatus     = g(statusIdx + 2);
+  const reviseEmail      = g(statusIdx + 3);
+  const finalResults     = g(statusIdx - 2);
+  const surveyResults    = g(statusIdx - 3);
+  const year             = g(statusIdx - 4);
+  const week             = g(statusIdx - 5);
+  const dailyUpdate      = g(statusIdx - 6);
+
+  // 3. Hub Code: col 1 is the reliable source; regex scan as first pick
+  //    Supports: AMBRI-A, ARPBN, AKATU, P10-BKTH006, HKRAT-E, etc.
+  const hubRe  = /^[A-Z][A-Z0-9]{1,9}(-[A-Z0-9]+)*$/;
+  const areaRe = /^(GBKK|UPC|BKK)[A-Z0-9-]*$/;
+  let hubCode='', area='', district='', hubDirection='';
+
+  const scanLimit = Math.min(statusIdx - 6, 20);
+  for (let i = 0; i < scanLimit; i++) {
+    const v = g(i);
+    if (!v) continue;
+    if (!hubCode && hubRe.test(v) && !areaRe.test(v)) hubCode = v;
+    if (!area    && areaRe.test(v)) area = v;
+    if (!district && (v.startsWith('เขต') || v.startsWith('อำเภอ'))) district = v;
+  }
+  // Final fallback: col 1 is always the hub code in this sheet format
+  if (!hubCode) hubCode = g(1);
+
+  // 4. Hub Direction: col right after district or after area
+  const distIdx = district ? cols.findIndex(c => c.trim() === district) : -1;
+  const areaIdx = area     ? cols.findIndex(c => c.trim() === area)     : -1;
+  const dirBase = distIdx >= 0 ? distIdx : areaIdx;
+  if (dirBase >= 0 && dirBase + 1 < statusIdx - 6) {
+    hubDirection = g(dirBase + 1);
+  }
+
+  if (!hubCode) return null;   // can't build a record without hub code
+
+  // 5. Hub Tier: scan FULL row (up to statusIdx-6) — "large"/"small" often at col 26+
+  const tierRe = /^(large|small|medium|half\s*samp|nano)$/i;
+  let tier = '';
+  for (let i = 0; i < statusIdx - 6; i++) {
+    const v = g(i);
+    if (!tier && tierRe.test(v)) { tier = v.charAt(0).toUpperCase() + v.slice(1).toLowerCase(); break; }
+  }
+
+  return {
+    hubCode, tier,
+    area, district, hubDirection, dailyUpdate,
+    week:  week ? Number(week) : '',
+    year:  year ? Number(year) : '',
+    surveyResults, finalResults, overallHubStatus,
+    inspectorPIC, surveyStatus, reviseEmail,
+    rowIndex: 9000 + idx,
+    _src: 'manual'
+  };
+}
+
+/* ── Parse paste ── */
+function parsePaste() {
+  const raw = document.getElementById('pasteInput').value.trim();
+  if (!raw) { toast('ยังไม่มีข้อมูล','err'); return; }
+  const colArrays = parseTSV(raw);
+  const parsed=[], skipped=[];
+  colArrays.forEach((cols,i) => {
+    const r = smartDetectRow(cols, i);
+    r ? parsed.push(r) : skipped.push(i+1);
+  });
+
+  const hint = document.getElementById('parseHint');
+  if (!parsed.length) { hint.textContent='❌ ไม่พบ Status ที่รู้จัก — ตรวจสอบคอลัมน์ Overall Hub Status'; return; }
+  hint.textContent = `✅ พบ ${parsed.length} แถว${skipped.length?' · ข้าม '+skipped.length+' แถว':''}`;
+
+  document.getElementById('importPreview').innerHTML = `
+    <div class="preview-card">
+      <div class="preview-head">
+        <span>Preview — ${parsed.length} records</span>
+        <button class="btn btn-primary btn-sm" onclick="confirmImport()">✓ นำเข้า ${parsed.length} แถว</button>
+      </div>
+      <div class="tbl-scroll" style="max-height:320px">
+        <table>
+          <thead><tr>
+            <th style="background:#2b2b2b;color:#fff">Hub Code</th>
+            <th style="background:#c9d6df;color:#333">hub tier</th>
+            <th style="background:#e8a0a0;color:#1a1a1a">Daily Update</th>
+            <th style="background:#003580;color:#fff">Week</th>
+            <th style="background:#003580;color:#fff">Year</th>
+            <th style="background:#00a650;color:#fff">Survey results</th>
+            <th style="background:#00a650;color:#fff">Final Results</th>
+            <th style="background:#d0d0d0;color:#222">Over all Hub status</th>
+            <th style="background:#d0d0d0;color:#222">Inspector PIC</th>
+          </tr></thead>
+          <tbody>${parsed.map(r=>{const tier=r.tier||'—';return`<tr>
+            <td><span class="hub-code">${e(r.hubCode)}</span></td>
+            <td style="text-align:center;font-weight:700;font-size:.78rem;color:${tierColor(tier)}">${tier}</td>
+            <td><div class="update-cell" title="${e(r.dailyUpdate)}">${e(r.dailyUpdate)||'—'}</div></td>
+            <td class="wk-cell">${r.week||'—'}</td>
+            <td style="text-align:center;color:var(--muted)">${r.year||'—'}</td>
+            <td>${bsr(r.surveyResults)}</td>
+            <td>${bsr(r.finalResults)}</td>
+            <td>${si(r.overallHubStatus)}</td>
+            <td>${e(r.inspectorPIC)||'—'}</td>
+          </tr>`}).join('')}</tbody>
+        </table>
+      </div>
+    </div>`;
+  window._pendingImport = parsed;
+}
+
+function confirmImport() {
+  const p = window._pendingImport;
+  if (!p?.length) return;
+  manualRows = [...manualRows, ...p];
+  localStorage.setItem(MANUAL_KEY, JSON.stringify(manualRows));
+  mergeRows(); renderAll();
+  document.getElementById('pasteInput').value = '';
+  document.getElementById('importPreview').innerHTML = '';
+  document.getElementById('parseHint').textContent = 'รองรับ 13 คอลัมน์ตามตารางหลัก';
+  window._pendingImport = null;
+  toast('นำเข้า '+p.length+' แถวสำเร็จ ✓','ok');
+}
+
+/* ── Manage / Delete ── */
+function renderManage() {
+  const all = [
+    ...fetchedRows.map(r=>({...r,_src:'gs'})),
+    ...manualRows.map(r=>({...r,_src:'manual'}))
+  ];
+  document.getElementById('manageCount').textContent = all.length + ' records ('+deletedIds.size+' ซ่อนอยู่)';
+  document.getElementById('manage-tbody').innerHTML = all.map(r => {
+    const uid = r.hubCode+'__'+r._src;
+    const del = deletedIds.has(uid);
+    return `<tr class="cb-row" style="${del?'opacity:.35':''}">
+      <td><input type="checkbox" class="row-cb" data-uid="${uid}" ${del?'checked':''}></td>
+      <td><span class="hub-code">${e(r.hubCode)}</span></td>
+      <td style="font-size:.74rem;color:var(--muted)">${e(r.area)||'—'}</td>
+      <td>${si(r.overallHubStatus)}</td>
+      <td>${e(r.inspectorPIC)||'—'}</td>
+      <td class="wk-cell">${r.week||'—'}</td>
+      <td><span class="src-badge ${r._src==='gs'?'src-gs':'src-manual'}">${r._src==='gs'?'Google Sheet':'Manual'}</span></td>
+    </tr>`;
+  }).join('') || `<tr><td colspan="7"><div class="loading-state">ไม่มีข้อมูล</div></td></tr>`;
+  document.getElementById('selectAll').checked = false;
+}
+
+function toggleSelectAll(checked) {
+  document.querySelectorAll('.row-cb').forEach(cb => cb.checked = checked);
+}
+
+function deleteSelected() {
+  const checked = [...document.querySelectorAll('.row-cb:checked')].map(cb=>cb.dataset.uid);
+  if (!checked.length) { toast('ยังไม่ได้เลือกแถว','err'); return; }
+  checked.forEach(uid => deletedIds.add(uid));
+  localStorage.setItem(DELETED_KEY, JSON.stringify([...deletedIds]));
+  mergeRows(); renderAll(); renderManage();
+  toast('ซ่อน '+checked.length+' แถวแล้ว','ok');
+}
+
+function restoreAll() {
+  deletedIds.clear();
+  localStorage.removeItem(DELETED_KEY);
+  mergeRows(); renderAll(); renderManage();
+  toast('คืนค่าข้อมูลทั้งหมดแล้ว','ok');
+}
+
+/* ── Toast ── */
+function toast(msg, type='ok') {
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.className=`toast show ${type}`;
+  clearTimeout(el._t); el._t=setTimeout(()=>el.classList.remove('show'),3000);
+}
+</script>
+</body>
+</html>
